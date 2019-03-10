@@ -14,7 +14,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#ifdef _WINDOWS_
+#ifdef _WIN32
   #include <tchar.h>
   #include <windows.h>
 #else

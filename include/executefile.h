@@ -11,6 +11,6 @@
 // #endif
 
 
-bool open_file();
+bool open_file(struct _CONFIG * const);
 
 #endif

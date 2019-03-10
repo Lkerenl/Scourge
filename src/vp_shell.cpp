@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "vp_shell.h"
+#include "executefile.h"
+
 
 static void welcome();
 static void shell_help(unsigned int);
@@ -65,10 +67,10 @@ static void set_config(struct _CONFIG * conf, char * arg)
 	printf("arg: %s\n",key);
 #endif
 
-	#ifndef _WINDOWS_
-		strtok_r(key, " ", &value);
-	#else
+	#ifdef _WIN32
 		strtok_s(key, " ", &value);
+	#else
+		strtok_r(key, " ", &value);
 	#endif
 
 #ifdef DEBUG
@@ -83,7 +85,7 @@ static void set_config(struct _CONFIG * conf, char * arg)
 
 
 	// switch(BKDRHash(key))
-	// {
+	// {·
 	// 	case :
 	// }
 
@@ -115,7 +117,7 @@ static void shell_run(struct _CONFIG * conf)
 		printf(">> ");
 		fflush(stdout);
 		fflush(stdin);
-#ifndef _WINDOWS_
+#ifndef _WIN32
 		read(0,cmd,128);
 		cmd[strlen(cmd)-1] = 0;
 		strtok_r(cmd, " ", &save_arg);
@@ -143,6 +145,7 @@ switch (cmd_hash) {
 	case 0xf84518d:show_config(conf);break; //show f84518d
 	case 0xe2ed712:break;//info e2ed712
 	case 0x1ede5b:break;//use 1ede5b
+	case 0xda8408e:exit(0);
 	default:
 		printf("command not found: %s\n",cmd);
 }
@@ -155,7 +158,7 @@ void shell_init(struct _CONFIG * conf)
 {
 	welcome();
 	printf("type %s,target %s.\n", conf->process ? "process" : "PE", conf->target);
-	printf("\033[31m[*] load file error.\033[0m \n");
+	open_file(conf);
 	shell_run(conf);
 	exit(1);
 }

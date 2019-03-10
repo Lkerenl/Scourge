@@ -1,37 +1,35 @@
 #include "pch.h"
 #include "executefile.h"
+#include <stdio.h>
 
-#ifndef _WINDOWS_
+#ifndef _WIN32
+#include <errno.h>
+#endif
 
-#elif __gnu_linux__
-
-bool open_file()
+bool open_file(struct _CONFIG * const conf)
 {
-  conf_init();
-  struct Fhdr fhdr;
-  uint64_t len;
-  uint8_t * buf;
-  conf.target = tg.target;
-  conf.fp = fopen(target,"rb");
-  if (conf.fp == NULL)
+  // unsigned int bytes_readed = 0;
+
+  // struct Fhdr fhdr;
+  // uint64_t len;
+  // uint8_t * buf;
+
+  #ifdef _WIN32
+  errno_t err =  fopen_s(conf->fp, (char *) conf->target, "rb");
+  if (err != 0)
   {
-    fprintf(stderr, "file open error.\n");
-    return -1;
+    fprintf(stderr, "%s\n", perror(err));
+    return false;
+  }
+  #else
+  conf->fp = fopen((char *) conf->target, "rb");
+  if(errno != 0)
+  {
+    fprintf(stderr, "\033[31m[-] %s: %s\033[0m\n", conf->target, strerror(errno));
+    return false;
   }
 
-  readelf(conf.fp, &fhdr);
-  printelfhdr(&fhdr);
+  #endif
+
+  return true;
 }
-
-
-#else
-
-bool open_file()
-{
-  char * target = tg.target;
-  unsigned int bytes_readed = 0;
-
-}
-
-
-#endif
