@@ -3,8 +3,11 @@
 #include "executefile.h"
 #include "process.h"
 #include "disassem.h"
+#include "analysis.h"
 
-#define size_malloc(p) (*(((size_t *)p)-1) & ~(0x01|0x02))
+
+
+// #define size_malloc(p) (*(((size_t *)p)-1) & ~(0x01|0x02))
 
 static void welcome();
 static void shell_help(unsigned int);
@@ -14,8 +17,17 @@ static void show_config(struct _CONFIG *);
 static void set_config(struct _CONFIG *, char *);
 static void show_info(struct _CONFIG *);
 static void analysis_target(struct _CONFIG *);
-static bool search_marked(uint8_t *, mi_t **);
+// static bool search_marked(uint8_t *, mi_t **);
+static unsigned int BKDRHash(char *str)
+{
+    unsigned int seed = 131;
+    unsigned int hash = 0;
 
+    while (*str)
+        hash = hash * seed + (*str++);
+
+    return (hash & 0x7FFFFFFF);
+}
 
 static inline char * get_target(struct _CONFIG * x, char * buf)
 {
@@ -45,60 +57,18 @@ static void show_config(struct _CONFIG * conf)
 
 static void analysis_target(struct _CONFIG * conf)
 {
-	// mi_t [] marked_list = {}
-	// mi_t mark_inv = {};
-	// uint8_t * ptr = get_text_ptr((elfobj_t *)conf->obj);
-	// if (search_marked(ptr,&conf->marked) == false)
-	// {
-	// 	fprintf(stderr, "%s Analysis termination<search> \n", FAILED);
-	// 	return;
-	// }
-	// #if DEBUG
-	// printf("marked_interval:\n");
-	// for (mi_t * tmp = conf->marked; tmp->begin != 0; tmp++)
-	// {
-	// 	printf("mi_begin: %p,mi_end: %p\n", tmp->begin, tmp->end);
-	// }
-	// #endif
-
-}
-static bool search_marked(uint8_t * ptr, mi_t ** marked)
-{
-	uint8_t * s_seek = ptr;
-	uint8_t * mi_begin = NULL;
-	uint8_t * mi_end = NULL;
-	const uint8_t bgstrsz = strlen(BEGIN_FALGS) + 1;
-	const uint8_t edstrsz = strlen(END_FLAGS) + 1;
-  mi_t * tmp = (mi_t *)malloc(sizeof(mi_t));
-	do {
-			//TODO : add marked
-
-		mi_begin = mi_end = NULL;
-		mi_begin = (uint8_t *)strstr((char *)s_seek, (char *)BEGIN_FALGS);
-		if (mi_begin != NULL)
-			{
-        s_seek = mi_begin + bgstrsz;
-        tmp->begin = (size_t)mi_begin;
-      }
-
-		mi_end = (uint8_t *)strstr((char *)s_seek, (char *)END_FLAGS);
-		if (mi_end != NULL)
-    {
-			s_seek = mi_end + edstrsz;
-      tmp->end = (size_t)mi_end;
-    }
-
-		if(mi_begin == NULL && mi_end)
-		{
-			fprintf(stderr, "%s The flags do not match(Not closed).  %p\n", FAILED, s_seek);
-			return false;
-		}
-    mi_begin && mi_end ? printf("mi_begin: %p,mi_end: %p\n", mi_begin, mi_end) : 0;
-    tmp = (mi_t *)realloc(tmp, size_malloc(tmp) + sizeof(mi_t));
-	} while(mi_begin || mi_end);
-
-	*marked = tmp;
-  return true;
+	if(!get_oep(conf))
+	{
+		fprintf(stderr, "%s Can't get entry point.\n", FAILED);
+		return;
+	}
+	search_marked(conf->oep_info.oep_addr,&(conf->marked),conf->oep_info.len);
+	#ifdef DEBUG
+	for (size_t i = 0; conf->marked[i].begin != NULL ; i++) {
+		printf("%p %p\n", conf->marked[i].begin,conf->marked[i].end);
+	}
+	// printf("\n");
+	#endif
 }
 
 static void show_info(struct _CONFIG * conf)
@@ -173,29 +143,24 @@ static void set_config(struct _CONFIG * conf, char * arg)
 	}
 
 
-	// switch(BKDRHash(key))
-	// {·
-	// 	case :
-	// }
+	switch(BKDRHash(key))
+	{
+		case 0x1a25b5: { //comprs_alg
+			switch (BKDRHash(value)) {
+				case 0x35d0866a:conf->comprs_alg = APLIB;break;
+				case 0x1c866e:conf->comprs_alg = LZ4;break;
+			}
+		}
+		case 0x1c38eb: {
+			strncpy(conf->key, value, strlen(value) < 32 ? strlen(value) : 32);
+			break;
+		}
+		default:
+			break;
+	}
 
 }
 
-static unsigned int BKDRHash(char *str)
-{
-    unsigned int seed = 131;
-    unsigned int hash = 0;
-
-    while (*str)
-        hash = hash * seed + (*str++);
-
-    return (hash & 0x7FFFFFFF);
-}
-
-// static void run_cmd(char * cmd, char * arg)
-// {
-//
-//
-// }
 
 
 
@@ -227,7 +192,7 @@ switch (cmd_hash) {
 	case 0xe2ed712:show_info(conf);break;//info e2ed712
 	case 0x1ede5b:break;//use 1ede5b
 	case 0x24fbe7b:show_disassem_code((elfobj_t *)conf->obj);break;//disass 24fbe7b
-	case 0x278b3da4:break;//analysis_target(conf);break;//analysis 278b3da4
+	case 0x278b3da4:analysis_target(conf);break;//analysis 278b3da4
 	case 0xda8408e:exit(0);
 	default:
 		printf("command not found: %s\n",cmd);

@@ -3,6 +3,7 @@
 #define OPTPARSE_IMPLEMENTATION
 #define OPTPARSE_API static
 #include "optparse.h"
+
 void help();
 
 int main(int argc, char ** argv)
@@ -18,34 +19,64 @@ int main(int argc, char ** argv)
   char *arg;
   int option;
   struct optparse options;
+	static struct _CONFIG conf;
+
   optparse_init(&options, argv);
 
-	static struct _CONFIG conf;
+
 	conf_init(&conf);
 
   while ((option = optparse_long(&options, longopts, NULL)) != -1) {
       switch (option) {
-      case 'h':
+      case 'h': {
           help();
 					exit(0);
           break;
-      case 'v':
-          printf("Verison: %s\n", VP_VERSION);
+				}
+      case 'v': {
+	        printf("Verison: %s\n", VP_VERSION);
 					exit(0);
-          break;
-      case 'a':
-          conf.process = 1;
-					conf.target = options.optarg;
-					shell_init(&conf);
-          break;
-      case 'f':
-          conf.target = options.optarg;
-					shell_init(&conf);
-          break;
-      case '?':
-			default:
-          fprintf(stderr, "%s: %s\n", argv[0], options.errmsg);
-          exit(EXIT_FAILURE);
+	        break;
+				}
+      case 'a': {
+				conf.process = 1;
+				conf.target = options.optarg;
+				shell_init(&conf);
+				break;
+			}
+      case 'f':{
+				char buf[4] = {0};
+				conf.target = options.optarg;
+				FILE * fp = fopen((char *)conf.target, "rb");
+
+				if (!fp)
+				{
+					fprintf(stderr, "Can't open file :%s\n", (char *)conf.target);
+					return -1;
+				}
+				fread(buf, 4, 1, fp);
+				// printf("%x\n",*(uint32_t *)buf);
+				if ((*(uint32_t *)buf & 0x5a4d) == 0x5a4d)
+					conf.type = PE;
+				else if ((*(uint32_t *)(buf) & 0x464c457f) == 0x464c457f)
+					conf.type = ELF;
+				else
+				{
+					fprintf(stderr, "%s file type maybe incorrect\n", FAILED);
+					return -1;
+				}
+				fclose(fp);
+				shell_init(&conf);
+				break;
+			}
+      case '?': {
+
+			}
+			default: {
+				fprintf(stderr, "%s: %s\n", argv[0], options.errmsg);
+				exit(EXIT_FAILURE);
+			}
+
       }
   }
 

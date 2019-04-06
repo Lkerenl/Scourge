@@ -1,44 +1,45 @@
 #include "pch.h"
 
-static inline int * get_next(uint8_t *, int);
 
-uint8_t * mem_search(const uint8_t * ptr,const uint8_t * submem, const uint64_t size, const uint64_t sub_size)
+size_t mem_search(uint8_t * mem, uint8_t * submem, size_t memlen,size_t submem_len)
 {
-  // uint8_t * p =
+  int sm_len = (int)submem_len;
+  int m_len = (int)memlen;
   int i,j;
-  int * next = get_next((uint8_t *)submem, sub_size);
-  for (i = 0, j = 0; i < size && j<sub_size ; i += j , j=0)
+  if (sm_len <=0 ||m_len <= 0)
   {
-    if( j == -1 || ptr[i] == submem[j])
+    fprintf(stderr,"len error\n");
+    return -1;
+  }
+  if(sm_len > m_len)
+  {
+    fprintf(stderr, "sub > len\n" );
+    return 0;
+  }
+
+  unsigned int * next = (unsigned int *)calloc(sm_len, sizeof(unsigned int));
+  for(i = -1,j = 0,next[0] = -1; j<sm_len-1;)
+  {
+    if(i == -1 || submem[j] == submem[i])
+      next[j++] = i++;
+
+    else
+      i = next[i];
+
+  }
+
+  for(j = 0,i = 0; i<m_len && j<sm_len; )
+  {
+    if (j == -1 ||mem[i] == submem[j])
       i++,j++;
     else
       j = next[j];
   }
   free(next);
-  next = 0;
-  if(j == sub_size)
-    return (uint8_t *)&ptr[i-j];
+  next = NULL;
 
-  return NULL;
-}
+  if(j == sm_len)
+    return i-j;
 
-static inline int * get_next(uint8_t * ptr, int size)
-{
-  int * next_list = (int *) calloc(size, sizeof(int));
-  int i = 0,j = -1;
-  for(next_list[0] = -1; i < size;)
-  {
-    if(j == -1 || ptr[i] == ptr[j])
-      next_list[++i] = ++j;
-    else
-      j = next_list[j];
-
-  }
-
-  for (i = 0;i<size;i++)
-  {
-    printf("%d ",next_list[j]);
-  }
-
-  return next_list;
+  return -1;
 }

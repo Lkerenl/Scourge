@@ -1,0 +1,11 @@
+﻿  stub.cpp
+c:\users\lkerenl\source\repos\stub\stub\stub.cpp(11): warning C4311: “类型强制转换”: 从“void (__cdecl *)(void)”到“DWORD”的指针截断
+c:\users\lkerenl\source\repos\stub\stub\stub.cpp(11): warning C4302: “类型强制转换”: 从“void (__cdecl *)(void)”到“DWORD”截断
+c:\users\lkerenl\source\repos\stub\stub\stub.cpp(34): warning C4312: “类型强制转换”: 从“LONG”转换到更大的“PIMAGE_NT_HEADERS64”
+c:\users\lkerenl\source\repos\stub\stub\stub.cpp(91): warning C4311: “类型强制转换”: 从“PBYTE”到“DWORD”的指针截断
+c:\users\lkerenl\source\repos\stub\stub\stub.cpp(91): warning C4302: “类型强制转换”: 从“PBYTE”到“DWORD”截断
+c:\users\lkerenl\source\repos\stub\stub\stub.cpp(68): warning C4715: “get_proc_address”: 不是所有的控件路径都返回值
+    正在创建库 C:\Users\lkerenl\source\repos\stub\x64\Debug\stub.lib 和对象 C:\Users\lkerenl\source\repos\stub\x64\Debug\stub.exp
+stub.obj : warning LNK4254: 节“.data”(C0000040)合并到具有不同特性的“.text”(60000020)
+LINK : warning LNK4039: 用 /SECTION 选项指定的节“.text=”不存在
+  stub.vcxproj -> C:\Users\lkerenl\source\repos\stub\x64\Debug\stub.dll
